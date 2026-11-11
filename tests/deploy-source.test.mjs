@@ -85,7 +85,9 @@ if(process.argv[2]==='build') {
   if(action==='advance') { git(['commit','--allow-empty','-m','Unreviewed movement']); const sha=execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(); git(['update-ref','refs/remotes/origin/main',sha]); }
   process.exit(0);
 }
-writeFileSync(process.env.RELEASE_FIXTURE_MARKER,JSON.stringify(process.argv.slice(2)));
+const args=process.argv.slice(2);
+if(args.slice(0,4).join(' ')==='wrangler d1 migrations apply') { console.log('fixture:migrate'); process.exit(0); }
+writeFileSync(process.env.RELEASE_FIXTURE_MARKER,JSON.stringify(args));
 console.error('FICTIONAL_UPLOAD_BOUNDARY');
 process.exit(19);
 `,
