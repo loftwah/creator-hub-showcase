@@ -1,6 +1,6 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "composer-showcase",
+  "name": "creator-hub-showcase",
   "account_id": "1003dc1d93af0ebea56b2f1252f89627",
   "main": "./src/worker.ts",
   "compatibility_date": "2026-10-13",
@@ -10,15 +10,15 @@
   "workers_dev": true,
   "routes": [
     {
-      "pattern": "showcase.loftwah.com",
+      "pattern": "creator-hub.loftwah.com",
       "custom_domain": true
     }
   ],
   "d1_databases": [
     {
       "binding": "DB",
-      "database_name": "composer-showcase",
-      "database_id": "c366203f-d880-4afc-a78e-d3e607146469",
+      "database_name": "creator-hub-showcase",
+      "database_id": "b31c7d10-0776-4c7f-98b0-609134fed6f8",
       "migrations_dir": "migrations"
     }
   ],
@@ -27,18 +27,16 @@
     "head_sampling_rate": 0.1
   },
   "vars": {
-    "PUBLIC_ORIGIN": "https://showcase.loftwah.com",
-    "COMPOSER_ISSUER": "https://composer.loftwah.com",
-    "PROFILE_ORIGIN": "https://showcase.loftwah.com",
-    "PROVIDER_ORIGIN": "https://guestbook.loftwah.com",
+    "PUBLIC_ORIGIN": "https://creator-hub.loftwah.com",
+    "PROFILE_ORIGIN": "https://creator-hub.loftwah.com",
+    "PROVIDER_ORIGIN": "https://creator-hub-guestbook.loftwah.com",
     "PROVIDER_ID": "guestbook",
-    "PROVIDER_MOUNT": "/guestbook",
-    "OWNER_STUDIO_URL": "https://composer.loftwah.com/_emdash/admin/plugins/composer-miniapps/apps?app=showcase"
+    "PROVIDER_MOUNT": "/guestbook"
   },
   "services": [
     {
       "binding": "ITEM_PROVIDER",
-      "service": "composer-guestbook"
+      "service": "creator-hub-guestbook"
     }
   ],
   "assets": {

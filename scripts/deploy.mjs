@@ -16,6 +16,9 @@ const sha = git(["rev-parse", "HEAD"]);
 const root = realpathSync(".");
 const remote = git(["remote", "get-url", "origin"]);
 const targetConfig = readFileSync("wrangler.jsonc");
+// An independent deployment verifies its own origin, not the operator's.
+const publicOrigin = JSON.parse(targetConfig).vars?.PUBLIC_ORIGIN;
+if (!publicOrigin) throw new Error("wrangler.jsonc must declare vars.PUBLIC_ORIGIN");
 const objectFormat = git(["rev-parse", "--show-object-format"]);
 const files = git(["ls-tree", "-r", "-z", sha])
   .split("\0")
@@ -85,7 +88,7 @@ execFileSync(
 let verified = false;
 for (let attempt = 0; attempt < 12; attempt++) {
   try {
-    const response = await fetch("https://showcase.loftwah.com/build.json", {
+    const response = await fetch(publicOrigin + "/build.json", {
       headers: { "User-Agent": "Mozilla/5.0 (AppComposer verification)" },
       signal: AbortSignal.timeout(10000),
     });
@@ -102,7 +105,7 @@ if (!verified) throw new Error("Live source identity did not converge");
 let sharingVerified = false;
 for (let attempt = 0; attempt < 8; attempt++) {
   try {
-    await verifySharing("https://showcase.loftwah.com");
+    await verifySharing(publicOrigin);
     sharingVerified = true;
     break;
   } catch (error) {
