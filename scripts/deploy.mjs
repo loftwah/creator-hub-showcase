@@ -67,6 +67,24 @@ unchanged();
 execFileSync("pnpm", ["check"], { stdio: "inherit" });
 execFileSync("pnpm", ["build"], { stdio: "inherit" });
 unchanged();
+// Apply only this app's forward migrations to its own database before the
+// upload. Without this an independent deployment serves a schema-less app.
+execFileSync(
+  "pnpm",
+  [
+    "wrangler",
+    "d1",
+    "migrations",
+    "apply",
+    "DB",
+    "--remote",
+    "--config",
+    "wrangler.jsonc",
+    "--env=",
+  ],
+  { stdio: "inherit" },
+);
+unchanged();
 execFileSync(
   "pnpm",
   [
