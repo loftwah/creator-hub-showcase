@@ -94,6 +94,33 @@ function fixture({ mounted = false, state = 'open', configuration = 1 } = {}) {
   return { sqlite, env, calls, request, currentSetting, publicOrigin, providerPath, close() { sqlite.close(); } };
 }
 
+test('only an opted-in standalone profile links to its paired postcard form', async () => {
+  const standalone = fixture({ state: 'paused' });
+  const mounted = fixture({ mounted: true });
+  try {
+    for (const f of [standalone, mounted])
+      assert.equal((await f.request('/api/config', config)).status, 200);
+    const page = async (f) => (await f.request('/', undefined, false)).text();
+    const action = /href="https:\/\/guestbook\.example\.test\/contribute" rel="noreferrer">Open postcard form/;
+    assert.doesNotMatch(await page(standalone), action);
+
+    standalone.env.SHOW_POSTCARD_FORM = true;
+    assert.match(await page(standalone), action);
+    assert.equal(standalone.calls.length, 0, 'the link does not probe or submit to Guestbook');
+
+    mounted.env.SHOW_POSTCARD_FORM = true;
+    assert.doesNotMatch(await page(mounted), /Open postcard form/);
+
+    await standalone.request('/api/invitation', { action: 'enable', source });
+    const paused = await page(standalone);
+    assert.match(paused, /Guest postcards are paused right now/);
+    assert.doesNotMatch(paused, /Open postcard form/);
+  } finally {
+    standalone.close();
+    mounted.close();
+  }
+});
+
 test('an owner links the exact Guestbook and the profile offers the real form only while it is open', async () => {
   const f = fixture();
   try {

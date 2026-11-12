@@ -7,6 +7,7 @@ import { collectResourceItem, collectionWriteProof } from "./resource-collection
 import {
   providerItems,
   providerItem,
+  providerLocation,
   resolveCard as resolve,
   exportCard,
   sourceSelection,
@@ -47,6 +48,7 @@ interface Env extends BaseEnv, PublisherEnv {
   PROVIDER_ID: string;
   PROVIDER_MOUNT: string;
   PROVIDER_BASE?: string;
+  SHOW_POSTCARD_FORM?: boolean;
   ASSETS?: Fetcher;
   PROFILE_ORIGIN?:string;
   COMPOSER_ISSUER?:string;
@@ -73,6 +75,18 @@ async function contribution(env:Env){
   const invitation=await readGuestbookInvitation(env,setting.source).catch(()=>null);
   return {setting,invitation:invitation??{state:'unavailable'} as const,problem:false};
 }
+// An explicit standalone deployment link leaves intake state and guest codes
+// to the paired Guestbook. A scoped invitation always takes precedence.
+function standalonePostcardForm(env: Env, base: string): string {
+  if (base || env.SHOW_POSTCARD_FORM !== true || env.PROVIDER_ID !== 'guestbook') return '';
+  try {
+    const provider = providerLocation(env);
+    return provider.base ? '' : provider.origin + '/contribute';
+  } catch {
+    return '';
+  }
+}
+
 async function styles(env:Env){
  const row=await env.DB.prepare("SELECT value FROM settings WHERE id='presentation'").first<{value:string}>();
  return row?presentation(JSON.parse(row.value)):{};
@@ -426,13 +440,14 @@ const app = {
         const profileLinks=profileFields.filter(field=>field.key!=='handle'&&!field.image&&config[field.key]).map(field=>`<a href="${escape(config[field.key])}" rel="me noopener noreferrer">${field.label}${icon('arrow')}</a>`).join('');
         const profileIdentity=config.handle?`<p class="profile-handle">@${escape(config.handle)}</p>`:'';
         const savedInvitation=await contribution(env);
+        const postcardForm = savedInvitation.invitation === null ? standalonePostcardForm(env, base) : '';
         const contributionHTML=contributionSection(savedInvitation.invitation,value=>invitationHref(env,value,base));
         const share=`<div class="profile-share"><button type="button" class="secondary" data-share-profile hidden>Share profile</button><button type="button" class="secondary" data-copy-profile hidden>Copy profile link</button><p role="status" aria-live="polite" data-share-status></p><label data-share-fallback hidden>Published profile URL<input readonly value="${escape(new URL(env.PUBLIC_ORIGIN).origin+base+'/')}"></label></div><script type="module" src="${base}/brand/profile-share.js"></script>`;
         const href=(c:any)=>cardDestination(c,base,env.PROVIDER_MOUNT);
         const cardMarkup=(c:any)=>config.layout==='compact'?`<article data-gallery-item data-kind="${c.provider?'photo':'link'}"><a class="compact-link" href="${escape(href(c))}"><span class="link-symbol">${icon(c.icon)}</span><span class="compact-copy"><span class="compact-title">${escape(c.title)}</span>${c.description?`<span class="compact-description">${escape(c.description)}</span>`:''}<span class="compact-destination">${escape(new URL(c.url).hostname)}${c.pinned?' · Pinned':''}</span></span><span class="link-direction">${icon('arrow')}</span></a></article>`:`<article data-gallery-item data-kind="${c.provider?'photo':'link'}"><a href="${escape(href(c))}">${c.image?`<img src="${escape(c.image)}" alt="${escape(c.title)}" width="1200" height="900" loading="lazy">`:`<div class="link-preview"><span class="link-symbol">${icon(c.icon)}</span><strong>${escape(new URL(c.url).hostname)}</strong></div>`}<h3>${escape(c.title)}</h3></a><p>${escape(c.description)}</p><span class="badge">${c.pinned?'Pinned · ':''}${c.provider?'Live source contribution':'Curated link'}</span></article>`;
         return html(
           String(config.title),
-          config.layout==='profile'?creatorProfile(config,resolved,base,share,tagSection,achievementSection,href,contributionHTML):`<section class="collection-hero" aria-labelledby="collection-title"><div class="collection-copy"><p class="collection-kicker">Linkarooie · Curated collection</p><h1 id="collection-title">${escape(config.title)}</h1>${profileIdentity}<p class="lede">${escape(config.intro)}</p>${profileLinks?`<nav class="profile-social" aria-label="Profile links">${profileLinks}</nav>`:''}<div class="collection-actions"><a class="button" href="#collection">Explore the collection</a><a href="${base}/owner">Curate this collection</a></div><p class="collection-note">Up to eight picks, arranged by the owner.</p>${share}</div><figure><img class="collection-art" src="${base}/brand/linkarooie-art-20261018-960.webp" srcset="${base}/brand/linkarooie-art-20261018-480.webp 480w, ${base}/brand/linkarooie-art-20261018-960.webp 960w" sizes="(max-width: 820px) calc(100vw - 40px), (max-width: 1248px) 50vw, 584px" width="960" height="960" fetchpriority="high" alt="A lime kangaroo selects an orange cassette beside a handheld game and notebook in a purple workshop."><figcaption>Original illustration for Linkarooie. The collection below holds the published links and moments.</figcaption></figure></section>${contributionHTML}${tagSection}<section class="collection-section" id="collection" aria-labelledby="picks-title"><div class="collection-heading"><h2 id="picks-title">Worth a closer look</h2>${resolved.length ? "<p>Follow a link. Open a moment.</p>" : ""}</div>${resolved.length > 1 ? `<div class="gallery-controls"><label>Find in this collection<input id="gallery-search" type="search" placeholder="Caption, title or alias" autocomplete="off"></label><label>Show<select id="gallery-type" aria-label="Show"><option value="">Photos and links</option><option value="photo">Photos</option><option value="link">Links</option></select></label></div><p id="gallery-count" class="small" role="status" aria-live="polite"></p><p id="gallery-empty" class="gallery-empty" hidden>No items match. Try another search or show photos and links.</p>` : ""}<div class="gallery ${escape(config.layout)}">${resolved.map(cardMarkup).join("") || '<div class="collection-empty"><h3>No published links yet</h3><p>The owner can publish a link or feature an approved photo. Draft and unavailable items stay out of this collection.</p></div>'}</div></section>${achievementSection}<aside class="collection-context"><p>A reading list, a tiny portfolio or the eight things you keep recommending. Links are chosen here; photos come from <a href="${base ? "/guestbook/" : "https://guestbook.loftwah.com/"}">Here / there</a> and remain subject to its current approval.</p></aside>`,
+          config.layout==='profile'?creatorProfile(config,resolved,base,share,tagSection,achievementSection,href,contributionHTML,postcardForm):`<section class="collection-hero" aria-labelledby="collection-title"><div class="collection-copy"><p class="collection-kicker">Linkarooie · Curated collection</p><h1 id="collection-title">${escape(config.title)}</h1>${profileIdentity}<p class="lede">${escape(config.intro)}</p>${profileLinks?`<nav class="profile-social" aria-label="Profile links">${profileLinks}</nav>`:''}<div class="collection-actions"><a class="button" href="#collection">Explore the collection</a><a href="${base}/owner">Curate this collection</a></div><p class="collection-note">Up to eight picks, arranged by the owner.</p>${share}</div><figure><img class="collection-art" src="${base}/brand/linkarooie-art-20261018-960.webp" srcset="${base}/brand/linkarooie-art-20261018-480.webp 480w, ${base}/brand/linkarooie-art-20261018-960.webp 960w" sizes="(max-width: 820px) calc(100vw - 40px), (max-width: 1248px) 50vw, 584px" width="960" height="960" fetchpriority="high" alt="A lime kangaroo selects an orange cassette beside a handheld game and notebook in a purple workshop."><figcaption>Original illustration for Linkarooie. The collection below holds the published links and moments.</figcaption></figure></section>${contributionHTML}${tagSection}<section class="collection-section" id="collection" aria-labelledby="picks-title"><div class="collection-heading"><h2 id="picks-title">Worth a closer look</h2>${resolved.length ? "<p>Follow a link. Open a moment.</p>" : ""}</div>${resolved.length > 1 ? `<div class="gallery-controls"><label>Find in this collection<input id="gallery-search" type="search" placeholder="Caption, title or alias" autocomplete="off"></label><label>Show<select id="gallery-type" aria-label="Show"><option value="">Photos and links</option><option value="photo">Photos</option><option value="link">Links</option></select></label></div><p id="gallery-count" class="small" role="status" aria-live="polite"></p><p id="gallery-empty" class="gallery-empty" hidden>No items match. Try another search or show photos and links.</p>` : ""}<div class="gallery ${escape(config.layout)}">${resolved.map(cardMarkup).join("") || '<div class="collection-empty"><h3>No published links yet</h3><p>The owner can publish a link or feature an approved photo. Draft and unavailable items stay out of this collection.</p></div>'}</div></section>${achievementSection}<aside class="collection-context"><p>A reading list, a tiny portfolio or the eight things you keep recommending. Links are chosen here; photos come from <a href="${base ? "/guestbook/" : "https://guestbook.loftwah.com/"}">Here / there</a> and remain subject to its current approval.</p></aside>`,
           base,
           "showcase",
           String(config.theme),
