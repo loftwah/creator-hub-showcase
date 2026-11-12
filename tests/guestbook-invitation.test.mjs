@@ -107,6 +107,8 @@ test('only an opted-in standalone profile links to its paired postcard form', as
     standalone.env.SHOW_POSTCARD_FORM = true;
     assert.match(await page(standalone), action);
     assert.equal(standalone.calls.length, 0, 'the link does not probe or submit to Guestbook');
+    const studio = async () => (await standalone.request('/owner')).text();
+    assert.match(await studio(), /The profile links to the standalone postcard form/);
 
     mounted.env.SHOW_POSTCARD_FORM = true;
     assert.doesNotMatch(await page(mounted), /Open postcard form/);
@@ -115,6 +117,7 @@ test('only an opted-in standalone profile links to its paired postcard form', as
     const paused = await page(standalone);
     assert.match(paused, /Guest postcards are paused right now/);
     assert.doesNotMatch(paused, /Open postcard form/);
+    assert.match(await studio(), /Removing this visitor book brings back the standalone postcard form link/);
   } finally {
     standalone.close();
     mounted.close();
