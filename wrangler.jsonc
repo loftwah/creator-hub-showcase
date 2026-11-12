@@ -31,6 +31,7 @@
     "PROFILE_ORIGIN": "https://creator-hub.loftwah.com",
     "PROVIDER_ORIGIN": "https://creator-hub-guestbook.loftwah.com",
     "PROVIDER_ID": "guestbook",
+    "SHOW_POSTCARD_FORM": true,
     "PROVIDER_MOUNT": "/guestbook"
   },
   "services": [
