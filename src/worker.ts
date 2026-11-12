@@ -111,7 +111,7 @@ function invitationStudio(
 ) {
   const state = invitation?.state ?? 'none';
   const status = hasPostcardShortcut && state === 'none'
-    ? 'The profile links to the standalone postcard form.'
+    ? 'The profile links to the standalone postcard page.'
     : invitationStateText[state] ?? invitationStateText.unavailable;
   const removeLabel = hasPostcardShortcut ? 'Remove this visitor book' : 'Stop inviting notes from this Guestbook';
   const control = setting
@@ -122,7 +122,7 @@ function invitationStudio(
   return `<section class="invitation-studio" aria-labelledby="invitation-title"><h2 id="invitation-title">Invite a note</h2>
     <p>Guestbook is where a visitor writes a short postcard. The owner reviews it privately before it can appear anywhere. A linked visitor book shows a send action here while it accepts postcards.</p>
     <p><strong>Current:</strong> ${status}</p>
-    ${setting && hasPostcardShortcut ? '<p class="small">Removing this visitor book brings back the standalone postcard form link.</p>' : ''}
+    ${setting && hasPostcardShortcut ? '<p class="small">Removing this visitor book brings back the standalone postcard page link.</p>' : ''}
     ${setting?`<p class="small">Linked resource ${escape(setting.source.resource)}, configuration ${setting.source.configuration}.</p>`:''}
     ${control}
     <p class="small"><a href="${escape(guestbookStudio)}">Review and approve notes in the Guestbook studio</a>. Featuring is a separate choice: an approved note still appears here only when you select it under “Feature an approved moment”.</p>

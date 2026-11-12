@@ -59,7 +59,7 @@ export function creatorProfile(
     .map((group) => `<a href="#${group.id}">${group.name}</a>`)
     .join("");
   const postcardLink = postcardForm
-    ? `<a href="${escape(postcardForm)}" rel="noreferrer">Open postcard form</a>`
+    ? `<a href="${escape(postcardForm)}" rel="noreferrer">Guestbook postcards</a>`
     : "";
   const navigation =
     featuredLink || groupLinks || postcardLink
