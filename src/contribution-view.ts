@@ -24,16 +24,16 @@ export function contributionSection(
   const open = invitation.state === 'open' && 'contribute' in invitation;
   const collection = 'collection' in invitation ? invitation.collection : '';
   const action = open
-    ? `<a class="button" href="${escape(href(invitation.contribute))}" rel="noopener noreferrer">Leave a note in the guestbook ${icon('arrow')}</a>`
+    ? `<a class="button" href="${escape(href(invitation.contribute))}" rel="noopener noreferrer">Leave a postcard ${icon('arrow')}</a>`
     : '';
   const browse =
     collection && invitation.state !== 'unavailable'
-      ? `<a class="creator-contribution-secondary" href="${escape(href(collection))}" rel="noopener noreferrer">See approved notes ${icon('arrow')}</a>`
+      ? `<a class="creator-contribution-secondary" href="${escape(href(collection))}" rel="noopener noreferrer">See approved postcards ${icon('arrow')}</a>`
       : '';
   return `<section class="creator-contribution" aria-labelledby="guestbook-note-title">
     <div class="creator-contribution-copy">
       <p class="creator-contribution-kicker">The guestbook</p>
-      <h2 id="guestbook-note-title">Leave a note</h2>
+      <h2 id="guestbook-note-title">Postcards</h2>
       <p>${note}</p>
       ${open ? '' : `<p class="creator-contribution-state">${stateCopy[invitation.state as Exclude<InvitationState, 'open'>]}</p>`}
     </div>

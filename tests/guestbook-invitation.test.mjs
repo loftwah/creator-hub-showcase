@@ -142,10 +142,10 @@ test('an owner links the exact Guestbook and the profile offers the real form on
     assert.equal(f.calls.at(-1).headers.get('Authorization'), null, 'the public invitation check carries no owner credential');
 
     const page = await (await f.request('/', undefined, false)).text();
-    assert.match(page, /<h2 id="guestbook-note-title">Leave a note<\/h2>/);
-    assert.match(page, /Leave a note in the guestbook/);
+    assert.match(page, /<h2 id="guestbook-note-title">Postcards<\/h2>/);
+    assert.match(page, /Leave a postcard/);
     assert.match(page, new RegExp(`href="https://guestbook\\.example\\.test/r/${resource}/c/1/contribute"`));
-    assert.match(page, /See approved notes/);
+    assert.match(page, /See approved postcards/);
     assert.match(page, /stays private|reviewed by the owner before anyone else/i);
     assert.doesNotMatch(page, /hunter2|OWNER_API_TOKEN|not-a-credential/);
 
@@ -201,11 +201,11 @@ for (const state of ['paused', 'closed', 'full']) test(`the ${state} contributio
   try {
     assert.equal((await f.request('/api/invitation', { action: 'enable', source })).status, 200);
     const page = await (await f.request('/', undefined, false)).text();
-    assert.match(page, /<h2 id="guestbook-note-title">Leave a note<\/h2>/);
+    assert.match(page, /<h2 id="guestbook-note-title">Postcards<\/h2>/);
     assert.match(page, /reviewed by the owner before anyone else/i);
-    assert.doesNotMatch(page, /Leave a note in the guestbook/, 'no send CTA unless the source accepts postcards');
+    assert.doesNotMatch(page, /Leave a postcard/, 'no send CTA unless the source accepts postcards');
     assert.match(page, state === 'full' ? /review queue is full/i : new RegExp(`${state === 'paused' ? 'paused' : 'closed'}`, 'i'));
-    assert.match(page, /See approved notes/, 'browsing approved notes remains useful');
+    assert.match(page, /See approved postcards/, 'browsing approved notes remains useful');
   } finally { f.close(); }
 });
 
@@ -233,7 +233,7 @@ for (const [name, respond] of [
     assert.equal((await f.request('/api/invitation', { action: 'enable', source })).status, 503);
     assert.equal(f.sqlite.prepare("SELECT value FROM settings WHERE id='invitation'").get(), undefined);
     const page = await (await f.request('/', undefined, false)).text();
-    assert.doesNotMatch(page, /guestbook-note-title|Leave a note in the guestbook/);
+    assert.doesNotMatch(page, /guestbook-note-title|Leave a postcard/);
   } finally { f.close(); }
 });
 
@@ -244,12 +244,12 @@ test('a saved invitation that can no longer be verified is quiet, not an open or
     f.env.ITEM_PROVIDER.fetch = async () => { throw Error('Fictional provider outage'); };
     const page = await (await f.request('/', undefined, false)).text();
     assert.match(page, /guestbook cannot be reached right now/i);
-    assert.doesNotMatch(page, /Leave a note in the guestbook|See approved notes/);
+    assert.doesNotMatch(page, /Leave a postcard|See approved postcards/);
     assert.doesNotMatch(page, /href="https:\/\/guestbook\.example\.test/);
     f.sqlite.prepare("UPDATE settings SET value='{invalid' WHERE id='invitation'").run();
     const invalid = await (await f.request('/', undefined, false)).text();
     assert.match(invalid, /guestbook cannot be reached right now/i);
-    assert.doesNotMatch(invalid, /Leave a note in the guestbook/);
+    assert.doesNotMatch(invalid, /Leave a postcard/);
   } finally { f.close(); }
 });
 
@@ -259,8 +259,8 @@ for (const layout of ['profile', 'grid', 'editorial', 'compact']) test(`the non-
     assert.equal((await f.request('/api/config', { ...config, layout })).status, 200);
     assert.equal((await f.request('/api/invitation', { action: 'enable', source })).status, 200);
     const page = await (await f.request('/', undefined, false)).text();
-    assert.match(page, /Guestbook is where a visitor writes|Leave a note/);
-    assert.match(page, /Leave a note in the guestbook/);
+    assert.match(page, /Guestbook is where a visitor writes|Postcards/);
+    assert.match(page, /Leave a postcard/);
   } finally { f.close(); }
 });
 
@@ -287,7 +287,7 @@ test('the owner studio explains review, approval and separate featuring and can 
     assert.match(before, /Guestbook is where a visitor writes a short postcard/);
     assert.match(before, /owner reviews it privately/);
     assert.match(before, /Featuring is a separate choice/);
-    assert.doesNotMatch(before, /Leave a note in the guestbook/);
+    assert.doesNotMatch(before, /Leave a postcard/);
     assert.equal((await f.request('/api/invitation', { action: 'enable', source })).status, 200);
     const after = await (await f.request('/owner')).text();
     assert.match(after, /Stop inviting notes from this Guestbook/);
