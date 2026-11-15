@@ -58,8 +58,14 @@ export function creatorProfile(
   const groupLinks = groups
     .map((group) => `<a href="#${group.id}">${group.name}</a>`)
     .join("");
+  // One write action, and a separate way to read what the owner approved. The
+  // collection is the guestbook origin the contribute form was built from;
+  // only derive it when the form really is that shape.
+  const postcardHome = /\/contribute$/.test(postcardForm)
+    ? postcardForm.replace(/\/contribute$/, "")
+    : "";
   const postcardLink = postcardForm
-    ? `<a href="${escape(postcardForm)}" rel="noreferrer">Guestbook postcards</a>`
+    ? `<a href="${escape(postcardForm)}" rel="noreferrer">Leave a postcard</a>${postcardHome ? `<a href="${escape(postcardHome)}" rel="noreferrer">See approved postcards</a>` : ""}`
     : "";
   const navigation =
     featuredLink || groupLinks || postcardLink

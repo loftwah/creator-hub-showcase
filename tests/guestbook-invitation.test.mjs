@@ -101,7 +101,7 @@ test('only an opted-in standalone profile links to its paired postcard form', as
     for (const f of [standalone, mounted])
       assert.equal((await f.request('/api/config', config)).status, 200);
     const page = async (f) => (await f.request('/', undefined, false)).text();
-    const action = /href="https:\/\/guestbook\.example\.test\/contribute" rel="noreferrer">Guestbook postcards/;
+    const action = /href="https:\/\/guestbook\.example\.test\/contribute" rel="noreferrer">Leave a postcard/;
     assert.doesNotMatch(await page(standalone), action);
 
     standalone.env.SHOW_POSTCARD_FORM = true;
@@ -111,12 +111,12 @@ test('only an opted-in standalone profile links to its paired postcard form', as
     assert.match(await studio(), /The profile links to the standalone postcard page/);
 
     mounted.env.SHOW_POSTCARD_FORM = true;
-    assert.doesNotMatch(await page(mounted), /Guestbook postcards/);
+    assert.doesNotMatch(await page(mounted), /Guestbook postcards|Leave a postcard/);
 
     await standalone.request('/api/invitation', { action: 'enable', source });
     const paused = await page(standalone);
     assert.match(paused, /Guest postcards are paused right now/);
-    assert.doesNotMatch(paused, /Guestbook postcards/);
+    assert.doesNotMatch(paused, /Guestbook postcards|Leave a postcard/);
     assert.match(await studio(), /Removing this visitor book brings back the standalone postcard page link/);
   } finally {
     standalone.close();
